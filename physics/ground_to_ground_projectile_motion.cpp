@@ -1,18 +1,7 @@
-/**
- * @file
- * @brief Ground to ground [projectile
- * motion](https://en.wikipedia.org/wiki/Projectile_motion) equation
- * implementations
- * @details Ground to ground projectile motion is when a projectile's trajectory
- * starts at the ground, reaches the apex, then falls back on the ground.
- *
- * @author [Focusucof](https://github.com/Focusucof)
- */
-
-#include <cassert>   /// for assert()
+#include <cassert>   ///< for assert()
 #define _USE_MATH_DEFINES
-#include <cmath>     /// for std::pow(), std::sin(), and std::cos()
-#include <iostream>  /// for IO operations
+#include <cmath>     ///< for std::pow(), std::sin(), and std::cos()
+#include <iostream>  ///< for IO operations
 
 /**
  * @namespace physics
@@ -22,23 +11,34 @@
 // Define gravity as a constant within guidelines
 constexpr double GRAVITY = 9.80665; ///< Standard gravity (m/s^2)
 
+// New constants for rounding precision
+constexpr double ROUND_PRECISION_3 = 1000.0; ///< Precision for rounding to 3 decimal places
+constexpr double ROUND_PRECISION_2 = 100.0;  ///< Precision for rounding to 2 decimal places
+constexpr double EPSILON = 0.001;            ///< Tolerance for floating-point comparison
 
 namespace physics {
 /**
  * @namespace ground_to_ground_projectile_motion
- * @brief Functions for the Ground to ground [projectile
- * motion](https://en.wikipedia.org/wiki/Projectile_motion) equation
+ * @brief Functions for the Ground to ground [projectile motion](https://en.wikipedia.org/wiki/Projectile_motion) equation
  */
 namespace ground_to_ground_projectile_motion {
 /**
- * @brief Convert radians to degrees
- * @param radian Angle in radians
- * @returns Angle in degrees
+ * @brief Convert degrees to radians
+ * @param degrees Angle in degrees
+ * @returns Angle in radians
  */
-
 double degrees_to_radians(double degrees){
-    double radians = degrees * (M_PI / 180);
-    return radians;
+    return degrees * (M_PI / 180);
+}
+
+/**
+ * @brief Validate input parameters for projectile motion
+ * @param velocity Initial velocity of the projectile
+ * @param angle Launch angle in degrees
+ * @returns True if inputs are valid, false otherwise
+ */
+bool is_valid_input(double velocity, double angle) {
+    return velocity >= 0.0 && angle >= 0.0 && angle <= 90.0;
 }
 
 /**
@@ -50,19 +50,20 @@ double degrees_to_radians(double degrees){
  */
 template <typename T>
 T time_of_flight(T initial_velocity, T angle, double gravity = GRAVITY) {
-    double Viy = initial_velocity * (std::sin(degrees_to_radians(angle))); // calculate y component of the initial velocity
+    double Viy = initial_velocity * std::sin(degrees_to_radians(angle)); // calculate y component of the initial velocity
     return 2.0 * Viy / gravity;
 }
 
 /**
  * @brief Calculate the horizontal distance that the projectile travels
  * @param initial_velocity The starting velocity of the projectile
+ * @param angle The angle that the projectile is launched at in degrees
  * @param time The time that the projectile is in the air
  * @returns Horizontal distance that the projectile travels
  */
 template <typename T>
 T horizontal_range(T initial_velocity, T angle, T time) {
-    double Vix = initial_velocity * (std::cos(degrees_to_radians(angle))); // calculate x component of the initial velocity
+    double Vix = initial_velocity * std::cos(degrees_to_radians(angle)); // calculate x component of the initial velocity
     return Vix * time;
 }
 
@@ -75,8 +76,8 @@ T horizontal_range(T initial_velocity, T angle, T time) {
  */
 template <typename T>
 T max_height(T initial_velocity, T angle, double gravity = GRAVITY) {
-    double Viy = initial_velocity * (std::sin(degrees_to_radians(angle))); // calculate y component of the initial velocity
-    return (std::pow(Viy, 2) / (2.0 * gravity));
+    double Viy = initial_velocity * std::sin(degrees_to_radians(angle)); // calculate y component of the initial velocity
+    return std::pow(Viy, 2) / (2.0 * gravity);
 }
 }  // namespace ground_to_ground_projectile_motion
 }  // namespace physics
@@ -90,18 +91,21 @@ static void test() {
     double initial_velocity = 5.0;  // double initial_velocity input
     double angle = 40.0;            // double angle input
 
+    // Validate inputs
+    assert(physics::ground_to_ground_projectile_motion::is_valid_input(initial_velocity, angle));
+
     // 1st test
     double expected_time_of_flight = 0.655;  // expected time output
     double flight_time_output =
-        std::round(physics::ground_to_ground_projectile_motion::time_of_flight(initial_velocity, angle) * 1000.0) /
-        1000.0;  // round output to 3 decimal places
+        std::round(physics::ground_to_ground_projectile_motion::time_of_flight(initial_velocity, angle) * ROUND_PRECISION_3) /
+        ROUND_PRECISION_3;  // round output to 3 decimal places
 
     std::cout << "Projectile Flight Time (double)" << std::endl;
     std::cout << "Input Initial Velocity: " << initial_velocity << std::endl;
     std::cout << "Input Angle: " << angle << std::endl;
     std::cout << "Expected Output: " << expected_time_of_flight << std::endl;
     std::cout << "Output: " << flight_time_output << std::endl;
-    assert(flight_time_output == expected_time_of_flight);
+    assert(std::abs(flight_time_output - expected_time_of_flight) < EPSILON);
     std::cout << "TEST PASSED" << std::endl << std::endl;
 
     // 2nd test
@@ -109,8 +113,8 @@ static void test() {
     double horizontal_range_output =
         std::round(physics::ground_to_ground_projectile_motion::horizontal_range(initial_velocity, angle,
                                              flight_time_output) *
-                   100.0) /
-        100.0;  // round output to 2 decimal places
+                   ROUND_PRECISION_2) /
+        ROUND_PRECISION_2;  // round output to 2 decimal places
 
     std::cout << "Projectile Horizontal Range (double)" << std::endl;
     std::cout << "Input Initial Velocity: " << initial_velocity << std::endl;
@@ -118,21 +122,21 @@ static void test() {
     std::cout << "Input Time Of Flight: " << flight_time_output << std::endl;
     std::cout << "Expected Output: " << expected_horizontal_range << std::endl;
     std::cout << "Output: " << horizontal_range_output << std::endl;
-    assert(horizontal_range_output == expected_horizontal_range);
+    assert(std::abs(horizontal_range_output - expected_horizontal_range) < EPSILON);
     std::cout << "TEST PASSED" << std::endl << std::endl;
 
     // 3rd test
     double expected_max_height = 0.526; // expected height output
     double max_height_output =
-        std::round(physics::ground_to_ground_projectile_motion::max_height(initial_velocity, angle) * 1000.0) /
-        1000.0;  // round output to 3 decimal places
+        std::round(physics::ground_to_ground_projectile_motion::max_height(initial_velocity, angle) * ROUND_PRECISION_3) /
+        ROUND_PRECISION_3;  // round output to 3 decimal places
 
     std::cout << "Projectile Max Height (double)" << std::endl;
     std::cout << "Input Initial Velocity: " << initial_velocity << std::endl;
     std::cout << "Input Angle: " << angle << std::endl;
     std::cout << "Expected Output: " << expected_max_height << std::endl;
     std::cout << "Output: " << max_height_output << std::endl;
-    assert(max_height_output == expected_max_height);
+    assert(std::abs(max_height_output - expected_max_height) < EPSILON);
     std::cout << "TEST PASSED" << std::endl << std::endl;
 }
 
